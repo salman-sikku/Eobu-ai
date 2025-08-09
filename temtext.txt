@@ -1,0 +1,38 @@
+interface ChatMessagePart {
+    text: string;
+}
+
+interface ChatMessage {
+    role: 'user' | 'model';
+    parts: ChatMessagePart[];
+}
+
+
+const API_KEY = "AIzaSyCnOBDnBvbPtp-CsuprDLMRXfZiKHyAJmQ";
+const genAI = new GoogleGenerativeAI(API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+
+
+const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
+
+
+const handleAI = async (promptText: string) => {
+        const chat = model.startChat({ history: chatHistory });
+        try {
+            const result = await chat.sendMessage(promptText);
+            const response = await result.response;
+            const text = response.text();
+
+            setChatHistory(prevHistory => [
+                ...prevHistory,
+                { role: 'user', parts: [{ text: promptText }] },
+                { role: 'model', parts: [{ text: text }] }
+            ]);
+
+            speak(text)
+        } catch (error) {
+            console.error("AI Error:", error);
+            speak("Sorry, I could not process your request.");
+        }
+    };
